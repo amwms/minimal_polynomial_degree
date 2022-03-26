@@ -3,14 +3,14 @@ global polynomial_degree
 section .text
 
 polynomial_degree:
-    ;ABI
+    ; ABI
     push rbx
     push r15
     push r12
     push rbp
     mov rbp, rsp
 
-    ; finding number of 8-bajt blocks needed for array y
+    ; finding number of 8-byte blocks needed for array y
     mov rax, rsi                    ; rax = n
     mov [rel n], rsi
     add rax, 32                     ; rax = n + 32
@@ -20,8 +20,8 @@ polynomial_degree:
     mul rsi                         ; rax = n * ((n + 32)/ 64 + 1) 
     lea rax, [rax + rax * 7]        ; rax = n * ((n + 32)/ 64  +1) * 8
     sub rsp, rax                    ; saving space for all th numbers on the stack
-;---------------------------------------------------------------------------------------------
-    ; read all y_k
+
+    ; read the input array and save it on the stack
     mov r10, 0                      ; set global counter of zeros to 0
     mov rcx, [rel n]                ; init counter (int i in loop)
     mov rbx, rdi                    ; read first argument's value
@@ -33,37 +33,27 @@ polynomial_degree:
     jnz .answer_is_not_zero
     inc r10                         ; if the number y_k (currently in register rsi) was a zero we increase the global counter of zeros
 .answer_is_not_zero: 
-.debug:
+
     call fill_number
 
     lea rdi, [rdi + 8]              ; after call fill_number rdi is set to the first block on the number that was just filled, so to go to the end of the next number we need to add 8 bajts 
     lea rbx, [rbx + 4]              ; go to the pionter to the next number in the array y_n
     loop .loop
 
-;---------------------------------------------------------------------------------------------
-;     ;debug - check what is in the stack
-;     mov rcx, [rel n]
-;     mov rbx, rsp
-;     mov r15, [rbx]
-.for: 
-;     mov r12, [rel blocks_number]
-;     mov r15, [rbx]
-;     lea rbx, [rbx + r12 * 8]  
-;     loop .for
-;---------------------------------------------------------------------------------------------
-    cmp r10, [rel n]                               ; if the table is only zeros return -1
+    ; count the degree
+    cmp r10, [rel n]                               ; if the array consists of only zeros return -1
     jne .not_only_zeros
     mov rax, -1
     jmp .end
 
-.not_only_zeros:
+.not_only_zeros:                                   ; if the array doesn't consist of only zeros count the degree in a loop (using an algorithm)
     mov r12, [rel blocks_number]
     mov rax, [rel n]
 
 .counting_degree:
-    mov rdi, rsp
+    mov rdi, rsp                                   ; set first argument of bigint_sub to the first number in the stack
     mov rsi, rsp
-    lea rsi, [rsi + r12 * 8]
+    lea rsi, [rsi + r12 * 8]                       ; set second argument of bigint_sub to the second number in the stack
 
     mov r10, 0                                     ; set global counter of not zeros to 0
 
@@ -76,7 +66,7 @@ polynomial_degree:
 
 .subtracting_end:
     cmp r10, 0
-    je .counting_end                            ; if all the answers of the subtractions were = 0 then we end the loop
+    je .counting_end                               ; if all the answers of the subtractions were = 0 then we end the loop
 
     dec rax
     jnz .counting_degree
@@ -87,7 +77,7 @@ polynomial_degree:
 
 .end:
 
-    ;ABI
+    ; ABI
     mov rsp, rbp
     pop rbp
     pop r12
@@ -96,19 +86,21 @@ polynomial_degree:
 
     ret
 
-fill_number: ;two argument: pionter to the end of number A destination, value of number A
-    ;ABI
-    ; push rdi
+; two arguments: pionter to the end of number A destination, value of number A
+; saves the number onto the stack and fills the rest of the 8-byte blocks (that were not filled by the number but are used to represent the number)
+; with 0 or 1 (if the number is < 0 then the rest of the 8-byte blocks need to be filled with 1's to keep the numbers original value - 
+; analogically if the number is > 0 but the 8-byte blocks need to be filled with 0's)
+fill_number: 
+    ; ABI
     push rcx
     push r12
     push rbx
     push rbp
     mov rbp, rsp
 
-    ; fill number
     mov QWORD[rel sign], 0;            ; init sign to zero (we suggest the number is not < 0)
     cmp rsi, [rel sign]                ; check the sign of the number
-    jnl .end_if ;jg .loop              ; if the number is < 0 we need to fill the rest of the registers with 1 if not we fill it with 0
+    jnl .end_if                        ; if the number is < 0 we need to fill the rest of the registers with 1 if not we fill it with 0
     mov QWORD[rel sign], -1            ; fill sign with 1
 .end_if:
     mov [rdi], rsi                     ; move number value of A to destination
@@ -123,18 +115,19 @@ fill_number: ;two argument: pionter to the end of number A destination, value of
     loop .loop
 .end:
 
-    ;ABI
+    ; ABI
     mov rsp, rbp
     pop rbp
     pop rbx
     pop r12
     pop rcx
-    ; pop rdi
 
     ret
 
-bigint_sub: ; two arguments: pointer to end of number A, pointer to end of number B, number of blocks in one number
-    ;ABI
+; two arguments: pointer to end of number A, pointer to end of number B, number of blocks in one number
+; subtracts two big numbers (represented in the form of [blocks_number] number of 8-byte blocks) from eachother 
+bigint_sub: 
+    ; ABI
     push r12
     push rcx
     push rbx
@@ -160,16 +153,7 @@ bigint_sub: ; two arguments: pointer to end of number A, pointer to end of numbe
     lea rsi, [rsi + 8]              ; move pionter to next block of number B
     loop .loop
 
-    
-; .loop:
-;     loop .loop
-;     sub rbx, r12 ; summ last two blocks of A and B
-;     mov [rdi], rbx ; write answer in the place of number A 
-;     add rdi, 0x8 ; move pionter to next block of number A
-;     add rsi, 0x8 ; move pionter to next block of number B
-
-
-    ;ABI
+    ; ABI
     mov rsp, rbp
     pop rbp
     pop rbx
@@ -177,7 +161,6 @@ bigint_sub: ; two arguments: pointer to end of number A, pointer to end of numbe
     pop r12
 
     ret
-
     
 section .bss
 blocks_number: resq 1 
