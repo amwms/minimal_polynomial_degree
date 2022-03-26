@@ -3,7 +3,7 @@ global polynomial_degree
 section .text
 polynomial_degree:
     ; ABI
-    push rbx
+    ; push rbx
     push rbp
     mov rbp, rsp
 
@@ -21,10 +21,10 @@ polynomial_degree:
     ; read the input array and save it on the stack
     mov r10, 0                      ; set global counter of zeros to 0
     mov rcx, [rel n]                ; init counter (int i in loop)
-    mov rbx, rdi                    ; read first argument's value
+    mov rax, rdi ;mov rbx, rdi                    ; read first argument's value
     mov rdi, rsp                    ; init first argument of function fill_number (as the bottom of the stack because thaat is the end of the number)                     
 .loop:
-    movsxd rsi, [rbx]               ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
+    movsxd rsi, [rax] ;movsxd rsi, [rbx]               ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
 
     cmp rsi, 0
     jnz .answer_is_not_zero
@@ -34,7 +34,7 @@ polynomial_degree:
     call fill_number
 
     lea rdi, [rdi + 8]              ; after call fill_number rdi is set to the first block on the number that was just filled, so to go to the end of the next number we need to add 8 bajts 
-    lea rbx, [rbx + 4]              ; go to the pionter to the next number in the array y_n
+    lea rax, [rax + 4]  ;lea rbx, [rbx + 4]              ; go to the pionter to the next number in the array y_n
     loop .loop
 
     ; count the degree
@@ -77,7 +77,7 @@ polynomial_degree:
     ; ABI
     mov rsp, rbp
     pop rbp
-    pop rbx
+    ; pop rbx
 
     ret
 
@@ -88,9 +88,8 @@ polynomial_degree:
 fill_number: 
     ; ABI
     push rcx
-    push rbx
-    push rbp
-    mov rbp, rsp
+    ; push rbp
+    ; mov rbp, rsp
 
     mov QWORD[rel sign], 0;            ; init sign to zero (we suggest the number is not < 0)
     cmp rsi, [rel sign]                ; check the sign of the number
@@ -110,9 +109,8 @@ fill_number:
 .end:
 
     ; ABI
-    mov rsp, rbp
-    pop rbp
-    pop rbx
+    ; mov rsp, rbp
+    ; pop rbp
     pop rcx
 
     ret
@@ -122,19 +120,18 @@ fill_number:
 bigint_sub: 
     ; ABI
     push rcx
-    push rbx
-    push rbp
-    mov rbp, rsp
+    ; push rbp
+    ; mov rbp, rsp
 
     ; read parameters
     mov rcx, [rel blocks_number]    ; number of blocks
     clc                             ; clear carry flag
 
 .loop:
-    mov rbx, [rdi]                  ; number A
+    mov r9, [rdi]                  ; number A
     
-    sbb rbx, [rsi]                  ; subtraction
-    mov [rdi], rbx                  ; write answer in the place of number A 
+    sbb r9, [rsi]                  ; subtraction
+    mov [rdi], r9                  ; write answer in the place of number A 
 
     jz .answer_is_zero
     inc r10                         ; if the result of sbb was not zero we increase the global counter of results of subtractions that were not 0
@@ -145,9 +142,8 @@ bigint_sub:
     loop .loop
 
     ; ABI
-    mov rsp, rbp
-    pop rbp
-    pop rbx
+    ; mov rsp, rbp
+    ; pop rbp
     pop rcx
 
     ret
