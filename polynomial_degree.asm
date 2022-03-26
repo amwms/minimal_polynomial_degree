@@ -7,7 +7,6 @@ section .text
 ; (for a certain real number x, a certain non-zero real number r and k = 0,1,2,…,n−1).
 polynomial_degree:
         ; ABI
-        ; push rbx
         push    rbp
         mov     rbp, rsp
 
@@ -25,10 +24,10 @@ polynomial_degree:
 ; read the input array and save it on the stack
         mov     r10, 0                     ; set global counter of zeros to 0
         mov     rcx, [rel n]               ; init counter (int i in loop)
-        mov     rax, rdi ;mov rbx, rdi                    ; read first argument's value
+        mov     rax, rdi                   ; read first argument's value
         mov     rdi, rsp                   ; init first argument of function fill_number (as the bottom of the stack because thaat is the end of the number)                     
 .loop:
-        movsxd  rsi, [rax] ;movsxd rsi, [rbx]               ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
+        movsxd  rsi, [rax]                 ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
 
         cmp     rsi, 0
         jnz     .answer_is_not_zero
@@ -81,7 +80,6 @@ polynomial_degree:
         ; ABI
         mov rsp, rbp
         pop rbp
-        ; pop rbx
 
         ret
 
@@ -90,10 +88,7 @@ polynomial_degree:
 ; with 0 or 1 (if the number is < 0 then the rest of the 8-byte blocks need to be filled with 1's to keep the numbers original value - 
 ; analogically if the number is > 0 but the 8-byte blocks need to be filled with 0's)
 fill_number: 
-        ; ABI
         push    rcx
-        ; push rbp
-        ; mov rbp, rsp
 
         mov     QWORD[rel sign], 0;        ; init sign to zero (we suggest the number is not < 0)
         cmp     rsi, [rel sign]            ; check the sign of the number
@@ -111,20 +106,14 @@ fill_number:
         mov     [rdi], r9
         loop    .loop
 .end:
-        ; ABI
-        ; mov rsp, rbp
-        ; pop rbp
-        pop rcx
+        pop rcx                            ; end of function and return the value of rcx from before calling the function
 
         ret
 
 ; two arguments: pointer to end of number A, pointer to end of number B, number of blocks in one number
 ; subtracts two big numbers (represented in the form of [blocks_number] number of 8-byte blocks) from eachother 
 bigint_sub: 
-        ; ABI
         push    rcx
-        ; push rbp
-        ; mov rbp, rsp
 
         mov     rcx, [rel blocks_number]   ; read the number of blocks
         clc                                ; clear carry flag
@@ -142,10 +131,7 @@ bigint_sub:
         lea     rsi, [rsi + 8]             ; move pionter to next block of number B
         loop    .loop
 
-        ; ABI
-        ; mov rsp, rbp
-        ; pop rbp
-        pop rcx
+        pop rcx                            ; end function and return the value of rcx from before calling the function
 
         ret
     
