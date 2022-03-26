@@ -1,12 +1,9 @@
 global polynomial_degree
 
 section .text
-
 polynomial_degree:
     ; ABI
     push rbx
-    push r15
-    push r12
     push rbp
     mov rbp, rsp
 
@@ -47,13 +44,13 @@ polynomial_degree:
     jmp .end
 
 .not_only_zeros:                                   ; if the array doesn't consist of only zeros count the degree in a loop (using an algorithm)
-    mov r12, [rel blocks_number]
+    mov r11, [rel blocks_number]
     mov rax, [rel n]
 
 .counting_degree:
     mov rdi, rsp                                   ; set first argument of bigint_sub to the first number in the stack
     mov rsi, rsp
-    lea rsi, [rsi + r12 * 8]                       ; set second argument of bigint_sub to the second number in the stack
+    lea rsi, [rsi + r11 * 8]                       ; set second argument of bigint_sub to the second number in the stack
 
     mov r10, 0                                     ; set global counter of not zeros to 0
 
@@ -80,8 +77,6 @@ polynomial_degree:
     ; ABI
     mov rsp, rbp
     pop rbp
-    pop r12
-    pop r15
     pop rbx
 
     ret
@@ -93,7 +88,6 @@ polynomial_degree:
 fill_number: 
     ; ABI
     push rcx
-    push r12
     push rbx
     push rbp
     mov rbp, rsp
@@ -110,8 +104,8 @@ fill_number:
     jz .end                            ; if rcx = 0 ommit the loop
 .loop:                                 ; fill rest of blocks with [rel sign]
     lea rdi, [rdi + 8]                 ; move to the next block
-    mov r12, [rel sign]
-    mov [rdi], r12
+    mov r9, [rel sign]
+    mov [rdi], r9
     loop .loop
 .end:
 
@@ -119,7 +113,6 @@ fill_number:
     mov rsp, rbp
     pop rbp
     pop rbx
-    pop r12
     pop rcx
 
     ret
@@ -128,7 +121,6 @@ fill_number:
 ; subtracts two big numbers (represented in the form of [blocks_number] number of 8-byte blocks) from eachother 
 bigint_sub: 
     ; ABI
-    push r12
     push rcx
     push rbx
     push rbp
@@ -140,9 +132,8 @@ bigint_sub:
 
 .loop:
     mov rbx, [rdi]                  ; number A
-    mov r12, [rsi]                  ; number B
     
-    sbb rbx, r12                    ; subtraction
+    sbb rbx, [rsi]                  ; subtraction
     mov [rdi], rbx                  ; write answer in the place of number A 
 
     jz .answer_is_zero
@@ -158,7 +149,6 @@ bigint_sub:
     pop rbp
     pop rbx
     pop rcx
-    pop r12
 
     ret
     
