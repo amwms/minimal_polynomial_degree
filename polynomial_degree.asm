@@ -45,14 +45,34 @@ polynomial_degree:
 ;     lea rbx, [rbx + r12 * 8]  
 ;     loop .for
 ;---------------------------------------------------------------------------------------------
+    mov r12, [rel blocks_number]
+    mov rax, [rel n]
+    
+.counting_degree:
     mov rdi, rsp
     mov rsi, rsp
-    mov r12, [rel blocks_number]
     lea rsi, [rsi + r12 * 8]
-.subtracting:
-    
 
-    call bigint_sub
+    mov r10, 0                                     ; set global counter of not zeros to 0
+
+    mov rcx, rax
+    dec rcx                                        ; we only need to do [rax] - 1 subtractoins because there are [rax] numbers that we do subtractions between 
+    jz .subtracting_end                            ; if rcx = 0 ommit the loop -> no need to subtract anything
+.subtracting_loop:
+    call bigint_sub                                ; at the end of this function the pointers are already set at the begining of the next numbers to subtract
+    loop .subtracting_loop 
+
+.subtracting_end:
+    cmp r10, 0
+    je .counting_end                            ; if all the answers of the subtractions were = 0 then we end the loop
+
+    dec rax
+    jnz .counting_degree
+.counting_end:
+
+    sub [rel n], rax
+    mov rax, [rel n]
+
 sub_debug:
 
 
@@ -120,6 +140,10 @@ bigint_sub: ; two arguments: pointer to end of number A, pointer to end of numbe
     
     sbb rbx, r12                    ; subtraction
     mov [rdi], rbx                  ; write answer in the place of number A 
+
+    jz .answer_is_zero
+    inc r10                         ; if the result of sbb was not zero we increase the global counter of results of subtractions that were not 0
+.answer_is_zero:
     
     lea rdi, [rdi + 8]              ; move pionter to next block of number A
     lea rsi, [rsi + 8]              ; move pionter to next block of number B
