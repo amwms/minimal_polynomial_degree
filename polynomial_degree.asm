@@ -1,152 +1,153 @@
 global polynomial_degree
 
 section .text
+
+; two arguments: pionter to the begining of an array, size of the array
+; counts and returns the smallest degree of the polynomial w(x), such that w(x+kr)=y_k 
+; (for a certain real number x, a certain non-zero real number r and k = 0,1,2,…,n−1).
 polynomial_degree:
-    ; ABI
-    ; push rbx
-    push rbp
-    mov rbp, rsp
+        ; ABI
+        ; push rbx
+        push    rbp
+        mov     rbp, rsp
 
-    ; finding number of 8-byte blocks needed for array y
-    mov rax, rsi                    ; rax = n
-    mov [rel n], rsi
-    add rax, 32                     ; rax = n + 32
-    shr rax, 6                      ; rax = (n + 32) / 64
-    add rax, 1                      ; rax = (n + 32) / 64 + 1
-    mov [rel blocks_number], rax    ; number of blocks in one number
-    mul rsi                         ; rax = n * ((n + 32)/ 64 + 1) 
-    lea rax, [rax + rax * 7]        ; rax = n * ((n + 32)/ 64  +1) * 8
-    sub rsp, rax                    ; saving space for all th numbers on the stack
+        ; finding number of 8-byte blocks needed for array y
+        mov     rax, rsi                   ; rax = n
+        mov     [rel n], rsi
+        add     rax, 32                    ; rax = n + 32
+        shr     rax, 6                     ; rax = (n + 32) / 64
+        add     rax, 1                     ; rax = (n + 32) / 64 + 1
+        mov     [rel blocks_number], rax   ; number of blocks in one number
+        mul     rsi                        ; rax = n * ((n + 32)/ 64 + 1) 
+        lea     rax, [rax + rax * 7]       ; rax = n * ((n + 32)/ 64  +1) * 8
+        sub     rsp, rax                   ; saving space for all th numbers on the stack
 
-    ; read the input array and save it on the stack
-    mov r10, 0                      ; set global counter of zeros to 0
-    mov rcx, [rel n]                ; init counter (int i in loop)
-    mov rax, rdi ;mov rbx, rdi                    ; read first argument's value
-    mov rdi, rsp                    ; init first argument of function fill_number (as the bottom of the stack because thaat is the end of the number)                     
+; read the input array and save it on the stack
+        mov     r10, 0                     ; set global counter of zeros to 0
+        mov     rcx, [rel n]               ; init counter (int i in loop)
+        mov     rax, rdi ;mov rbx, rdi                    ; read first argument's value
+        mov     rdi, rsp                   ; init first argument of function fill_number (as the bottom of the stack because thaat is the end of the number)                     
 .loop:
-    movsxd rsi, [rax] ;movsxd rsi, [rbx]               ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
+        movsxd  rsi, [rax] ;movsxd rsi, [rbx]               ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
 
-    cmp rsi, 0
-    jnz .answer_is_not_zero
-    inc r10                         ; if the number y_k (currently in register rsi) was a zero we increase the global counter of zeros
+        cmp     rsi, 0
+        jnz     .answer_is_not_zero
+        inc     r10                        ; if the number y_k (currently in register rsi) was a zero we increase the global counter of zeros
 .answer_is_not_zero: 
 
-    call fill_number
+        call    fill_number
 
-    lea rdi, [rdi + 8]              ; after call fill_number rdi is set to the first block on the number that was just filled, so to go to the end of the next number we need to add 8 bajts 
-    lea rax, [rax + 4]  ;lea rbx, [rbx + 4]              ; go to the pionter to the next number in the array y_n
-    loop .loop
+        lea     rdi, [rdi + 8]             ; after call fill_number rdi is set to the first block on the number that was just filled, so to go to the end of the next number we need to add 8 bajts 
+        lea     rax, [rax + 4]             ; go to the pionter to the next number in the array y_n
+        loop    .loop
 
-    ; count the degree
-    cmp r10, [rel n]                               ; if the array consists of only zeros return -1
-    jne .not_only_zeros
-    mov rax, -1
-    jmp .end
+; count the smallest degree
+        cmp     r10, [rel n]               ; if the array consists of only zeros return -1
+        jne     .not_only_zeros
+        mov     rax, -1
+        jmp     .end
 
-.not_only_zeros:                                   ; if the array doesn't consist of only zeros count the degree in a loop (using an algorithm)
-    mov r11, [rel blocks_number]
-    mov rax, [rel n]
+.not_only_zeros:                           ; if the array doesn't consist of only zeros count the degree in a loop (using an algorithm)
+        mov     r11, [rel blocks_number]
+        mov     rax, [rel n]
 
 .counting_degree:
-    mov rdi, rsp                                   ; set first argument of bigint_sub to the first number in the stack
-    mov rsi, rsp
-    lea rsi, [rsi + r11 * 8]                       ; set second argument of bigint_sub to the second number in the stack
+        mov     rdi, rsp                   ; set first argument of bigint_sub to the first number in the stack
+        mov     rsi, rsp
+        lea     rsi, [rsi + r11 * 8]       ; set second argument of bigint_sub to the second number in the stack
 
-    mov r10, 0                                     ; set global counter of not zeros to 0
+        mov     r10, 0                     ; set global counter of not zeros to 0
 
-    mov rcx, rax
-    dec rcx                                        ; we only need to do [rax] - 1 subtractoins because there are [rax] numbers that we do subtractions between 
-    jz .subtracting_end                            ; if rcx = 0 ommit the loop -> no need to subtract anything
+        mov     rcx, rax
+        dec     rcx                        ; we only need to do [rax] - 1 subtractoins because there are [rax] numbers that we do subtractions between 
+        jz      .subtracting_end           ; if rcx = 0 ommit the loop -> no need to subtract anything
+
 .subtracting_loop:
-    call bigint_sub                                ; at the end of this function the pointers are already set at the begining of the next numbers to subtract
-    loop .subtracting_loop 
+        call    bigint_sub                 ; at the end of this function the pointers are already set at the begining of the next numbers to subtract
+        loop    .subtracting_loop 
 
 .subtracting_end:
-    cmp r10, 0
-    je .counting_end                               ; if all the answers of the subtractions were = 0 then we end the loop
+        cmp     r10, 0
+        je      .counting_end              ; if all the answers of the subtractions were = 0 then we end the loop
 
-    dec rax
-    jnz .counting_degree
+        dec     rax
+        jnz     .counting_degree
+        
 .counting_end:
-
-    sub [rel n], rax
-    mov rax, [rel n]
+        sub     [rel n], rax
+        mov     rax, [rel n]
 
 .end:
+        ; ABI
+        mov rsp, rbp
+        pop rbp
+        ; pop rbx
 
-    ; ABI
-    mov rsp, rbp
-    pop rbp
-    ; pop rbx
-
-    ret
+        ret
 
 ; two arguments: pionter to the end of number A destination, value of number A
 ; saves the number onto the stack and fills the rest of the 8-byte blocks (that were not filled by the number but are used to represent the number)
 ; with 0 or 1 (if the number is < 0 then the rest of the 8-byte blocks need to be filled with 1's to keep the numbers original value - 
 ; analogically if the number is > 0 but the 8-byte blocks need to be filled with 0's)
 fill_number: 
-    ; ABI
-    push rcx
-    ; push rbp
-    ; mov rbp, rsp
+        ; ABI
+        push    rcx
+        ; push rbp
+        ; mov rbp, rsp
 
-    mov QWORD[rel sign], 0;            ; init sign to zero (we suggest the number is not < 0)
-    cmp rsi, [rel sign]                ; check the sign of the number
-    jnl .end_if                        ; if the number is < 0 we need to fill the rest of the registers with 1 if not we fill it with 0
-    mov QWORD[rel sign], -1            ; fill sign with 1
+        mov     QWORD[rel sign], 0;        ; init sign to zero (we suggest the number is not < 0)
+        cmp     rsi, [rel sign]            ; check the sign of the number
+        jnl     .end_if                    ; if the number is < 0 we need to fill the rest of the registers with 1 if not we fill it with 0
+        mov     QWORD[rel sign], -1        ; fill all the bits in [sign] with 1's (make it equal to -1)
 .end_if:
-    mov [rdi], rsi                     ; move number value of A to destination
-    mov rcx, [rel blocks_number]       ; i = number of blocks - 1
-    dec rcx                            ; ---------====------------
-    
-    jz .end                            ; if rcx = 0 ommit the loop
-.loop:                                 ; fill rest of blocks with [rel sign]
-    lea rdi, [rdi + 8]                 ; move to the next block
-    mov r9, [rel sign]
-    mov [rdi], r9
-    loop .loop
+        mov     [rdi], rsi                 ; move number value of A to its destination on the stack
+        mov     rcx, [rel blocks_number]   ; i = number of blocks - 1
+        dec     rcx                        ; ---------====------------
+        
+        jz      .end                       ; if rcx = 0 ommit the loop
+.loop:                                     ; fill rest of blocks with [rel sign]
+        lea     rdi, [rdi + 8]             ; move to the next block
+        mov     r9, [rel sign]
+        mov     [rdi], r9
+        loop    .loop
 .end:
+        ; ABI
+        ; mov rsp, rbp
+        ; pop rbp
+        pop rcx
 
-    ; ABI
-    ; mov rsp, rbp
-    ; pop rbp
-    pop rcx
-
-    ret
+        ret
 
 ; two arguments: pointer to end of number A, pointer to end of number B, number of blocks in one number
 ; subtracts two big numbers (represented in the form of [blocks_number] number of 8-byte blocks) from eachother 
 bigint_sub: 
-    ; ABI
-    push rcx
-    ; push rbp
-    ; mov rbp, rsp
+        ; ABI
+        push    rcx
+        ; push rbp
+        ; mov rbp, rsp
 
-    ; read parameters
-    mov rcx, [rel blocks_number]    ; number of blocks
-    clc                             ; clear carry flag
+        mov     rcx, [rel blocks_number]   ; read the number of blocks
+        clc                                ; clear carry flag
 
 .loop:
-    mov r9, [rdi]                  ; number A
-    
-    sbb r9, [rsi]                  ; subtraction
-    mov [rdi], r9                  ; write answer in the place of number A 
+        mov     r9, [rdi]                  ; laod number A to saubtract number B from it
+        sbb     r9, [rsi]                  ; subtraction between one block of number A and B
+        mov     [rdi], r9                  ; write the answer in the place of number A 
 
-    jz .answer_is_zero
-    inc r10                         ; if the result of sbb was not zero we increase the global counter of results of subtractions that were not 0
+        jz      .answer_is_zero
+        inc     r10                        ; if the result of sbb was not 0 we increase the global counter of the results of subtractions that were not 0
 .answer_is_zero:
-    
-    lea rdi, [rdi + 8]              ; move pionter to next block of number A
-    lea rsi, [rsi + 8]              ; move pionter to next block of number B
-    loop .loop
+        
+        lea     rdi, [rdi + 8]             ; move pionter to next block of number A
+        lea     rsi, [rsi + 8]             ; move pionter to next block of number B
+        loop    .loop
 
-    ; ABI
-    ; mov rsp, rbp
-    ; pop rbp
-    pop rcx
+        ; ABI
+        ; mov rsp, rbp
+        ; pop rbp
+        pop rcx
 
-    ret
+        ret
     
 section .bss
 blocks_number: resq 1 
