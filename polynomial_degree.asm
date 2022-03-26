@@ -22,11 +22,17 @@ polynomial_degree:
     sub rsp, rax                    ; saving space for all th numbers on the stack
 ;---------------------------------------------------------------------------------------------
     ; read all y_k
+    mov r10, 0                      ; set global counter of zeros to 0
     mov rcx, [rel n]                ; init counter (int i in loop)
     mov rbx, rdi                    ; read first argument's value
     mov rdi, rsp                    ; init first argument of function fill_number (as the bottom of the stack because thaat is the end of the number)                     
 .loop:
-    movsxd rsi, [rbx]               ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx  
+    movsxd rsi, [rbx]               ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
+
+    cmp rsi, 0
+    jnz .answer_is_not_zero
+    inc r10                         ; if the number y_k (currently in register rsi) was a zero we increase the global counter of zeros
+.answer_is_not_zero: 
 .debug:
     call fill_number
 
@@ -45,9 +51,15 @@ polynomial_degree:
 ;     lea rbx, [rbx + r12 * 8]  
 ;     loop .for
 ;---------------------------------------------------------------------------------------------
+    cmp r10, [rel n]                               ; if the table is only zeros return -1
+    jne .not_only_zeros
+    mov rax, -1
+    jmp .end
+
+.not_only_zeros:
     mov r12, [rel blocks_number]
     mov rax, [rel n]
-    
+
 .counting_degree:
     mov rdi, rsp
     mov rsi, rsp
@@ -73,8 +85,7 @@ polynomial_degree:
     sub [rel n], rax
     mov rax, [rel n]
 
-sub_debug:
-
+.end:
 
     ;ABI
     mov rsp, rbp
