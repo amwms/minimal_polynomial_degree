@@ -45,6 +45,16 @@ polynomial_degree:
 ;     lea rbx, [rbx + r12 * 8]  
 ;     loop .for
 ;---------------------------------------------------------------------------------------------
+    mov rdi, rsp
+    mov rsi, rsp
+    mov r12, [rel blocks_number]
+    lea rsi, [rsi + r12 * 8]
+.subtracting:
+    
+
+    call bigint_sub
+sub_debug:
+
 
     ;ABI
     mov rsp, rbp
@@ -100,19 +110,19 @@ bigint_sub: ; two arguments: pointer to end of number A, pointer to end of numbe
     push rbp
     mov rbp, rsp
 
-    ; subtract two numbers
-    mov rbx, [rdi]
-    mov r12, [rsi]                  ; read parameters
+    ; read parameters
     mov rcx, [rel blocks_number]    ; number of blocks
-    ; mov rcx, rdx ; number of blocks
+    clc                             ; clear carry flag
 
 .loop:
-    sub rbx, r12
-    mov [rdi], rbx ; write answer in the place of number A 
-    pushf
-    add rdi, 0x8 ; move pionter to next block of number A
-    add rsi, 0x8 ; move pionter to next block of number B
-    popf
+    mov rbx, [rdi]                  ; number A
+    mov r12, [rsi]                  ; number B
+    
+    sbb rbx, r12                    ; subtraction
+    mov [rdi], rbx                  ; write answer in the place of number A 
+    
+    lea rdi, [rdi + 8]              ; move pionter to next block of number A
+    lea rsi, [rsi + 8]              ; move pionter to next block of number B
     loop .loop
 
     
