@@ -26,14 +26,15 @@ polynomial_degree:
         mov     rcx, [rel n]               ; init counter (int i in loop)
         mov     rax, rdi                   ; read first argument's value
         mov     rdi, rsp                   ; init first argument of function fill_number (as the bottom of the stack because thaat is the end of the number)                     
+
 .loop:
         movsxd  rsi, [rax]                 ; init second argument of function fill_number -> value of y_k -> it is under pionter in rbx 
 
         cmp     rsi, 0
         jnz     .answer_is_not_zero
         inc     r10                        ; if the number y_k (currently in register rsi) was a zero we increase the global counter of zeros
-.answer_is_not_zero: 
 
+.answer_is_not_zero: 
         call    fill_number
 
         lea     rdi, [rdi + 8]             ; after call fill_number rdi is set to the first block on the number that was just filled, so to go to the end of the next number we need to add 8 bajts 
@@ -94,6 +95,7 @@ fill_number:
         cmp     rsi, [rel sign]            ; check the sign of the number
         jnl     .end_if                    ; if the number is < 0 we need to fill the rest of the registers with 1 if not we fill it with 0
         mov     QWORD[rel sign], -1        ; fill all the bits in [sign] with 1's (make it equal to -1)
+
 .end_if:
         mov     [rdi], rsi                 ; move number value of A to its destination on the stack
         mov     rcx, [rel blocks_number]   ; i = number of blocks - 1
@@ -125,8 +127,8 @@ bigint_sub:
 
         jz      .answer_is_zero
         inc     r10                        ; if the result of sbb was not 0 we increase the global counter of the results of subtractions that were not 0
+
 .answer_is_zero:
-        
         lea     rdi, [rdi + 8]             ; move pionter to next block of number A
         lea     rsi, [rsi + 8]             ; move pionter to next block of number B
         loop    .loop
