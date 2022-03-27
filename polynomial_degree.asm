@@ -27,7 +27,7 @@ polynomial_degree:
         add     rax, 1                     ; rax = (n + 32) / 64 + 1
         mov     [rel blocks_number], rax   ; number of blocks in one number
         mul     rsi                        ; rax = n * ((n + 32) / 64 + 1) 
-        shl rax, 3                         ; rax = n * ((n + 32) / 64 + 1) * 8
+        shl     rax, 3                     ; rax = n * ((n + 32) / 64 + 1) * 8
         sub     rsp, rax                   ; saving space for all the numbers on the stack
 
 ; read the input array and save it on the stack
