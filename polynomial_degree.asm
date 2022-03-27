@@ -16,8 +16,7 @@ section .text
 ; - rax, r10, rcx, rsi, rdi, rbp (but returned value), rsp (but returned value)
 polynomial_degree:
         ; ABI
-        push    rbp
-        mov     rbp, rsp
+        enter 0, 0
 
 ; finding number of 8-byte blocks needed for the numbers in array y
         mov     rax, rsi                   ; rax = n
@@ -62,8 +61,7 @@ polynomial_degree:
 
 .counting_degree:
         mov     rdi, rsp                   ; set first argument of bigint_sub to the first number in the stack
-        mov     rsi, rsp
-        lea     rsi, [rsi + r11 * 8]       ; set second argument of bigint_sub to the second number in the stack
+        lea     rsi, [rsp + r11 * 8]       ; set second argument of bigint_sub to the second number in the stack
 
         mov     r10, 0                     ; set global counter of not zeros to 0
 
@@ -88,8 +86,7 @@ polynomial_degree:
 
 .end:
         ; ABI
-        mov rsp, rbp
-        pop rbp
+        leave
 
         ret
 
