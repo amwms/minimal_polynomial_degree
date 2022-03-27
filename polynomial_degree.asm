@@ -19,7 +19,7 @@ polynomial_degree:
         push    rbp
         mov     rbp, rsp
 
-        ; finding number of 8-byte blocks needed for array y
+; finding number of 8-byte blocks needed for array y
         mov     rax, rsi                   ; rax = n
         mov     [rel n], rsi
         add     rax, 32                    ; rax = n + 32
@@ -27,7 +27,7 @@ polynomial_degree:
         add     rax, 1                     ; rax = (n + 32) / 64 + 1
         mov     [rel blocks_number], rax   ; number of blocks in one number
         mul     rsi                        ; rax = n * ((n + 32) / 64 + 1) 
-        lea     rax, [rax + rax * 7]       ; rax = n * ((n + 32) / 64 + 1) * 8
+        shl rax, 3                         ; rax = n * ((n + 32) / 64 + 1) * 8
         sub     rsp, rax                   ; saving space for all the numbers on the stack
 
 ; read the input array and save it on the stack
