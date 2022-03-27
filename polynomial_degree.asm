@@ -19,13 +19,13 @@ polynomial_degree:
         push    rbp
         mov     rbp, rsp
 
-; finding number of 8-byte blocks needed for array y
+; finding number of 8-byte blocks needed for the numbers in array y
         mov     rax, rsi                   ; rax = n
         mov     [rel n], rsi
         add     rax, 32                    
         shr     rax, 6                     
         add     rax, 1                     ; rax = (n + 32) / 64 + 1
-        mov     [rel blocks_number], rax   ; number of blocks in one number
+        mov     [rel blocks_number], rax   ; number of 8-byte blocks forming one number
         mul     rsi                        
         shl     rax, 3                     ; rax = n * ((n + 32) / 64 + 1) * 8
         sub     rsp, rax                   ; saving space for all the numbers on the stack
@@ -118,7 +118,7 @@ fill_number:
 
 .end_if:
         mov     [rdi], rsi                 ; move number value of A to its destination on the stack
-        mov     rcx, [rel blocks_number]   ; i = number of blocks - 1
+        mov     rcx, [rel blocks_number]   ; rcx = number of blocks - 1
         dec     rcx                        ; ---------====------------
         
         jz      .end                       ; if rcx = 0 omit the loop
