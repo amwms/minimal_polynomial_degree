@@ -7,7 +7,7 @@ section .text
 ;
 ; two arguments: 
 ; - rdi: pointer to the beginning of an array
-; - rsi: size of the array
+; - rsi: size of the array (n)
 ;
 ; return result:
 ; - rax: smallest degree of the polynomial w(x) that we were looking for
@@ -22,11 +22,11 @@ polynomial_degree:
 ; finding number of 8-byte blocks needed for array y
         mov     rax, rsi                   ; rax = n
         mov     [rel n], rsi
-        add     rax, 32                    ; rax = n + 32
-        shr     rax, 6                     ; rax = (n + 32) / 64
+        add     rax, 32                    
+        shr     rax, 6                     
         add     rax, 1                     ; rax = (n + 32) / 64 + 1
         mov     [rel blocks_number], rax   ; number of blocks in one number
-        mul     rsi                        ; rax = n * ((n + 32) / 64 + 1) 
+        mul     rsi                        
         shl     rax, 3                     ; rax = n * ((n + 32) / 64 + 1) * 8
         sub     rsp, rax                   ; saving space for all the numbers on the stack
 
