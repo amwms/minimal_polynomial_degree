@@ -99,8 +99,8 @@ polynomial_degree:
 ; to be filled with 0's).
 ;
 ; two arguments: 
-; - rdi: pointer to the "end" of number A destination,
-; - rax: value of number A
+; - rdi: pointer to the last block of number A's destination
+; - rsi: value of number A
 ;
 ; return result:
 ; - saves number A on the stack in its destination
