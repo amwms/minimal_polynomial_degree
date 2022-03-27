@@ -144,7 +144,7 @@ fill_number:
 ; - rdi and rsi point to the "end" of the next two numbers on the stack
 ;
 ; modified registers:
-; - r9, rdi, rsi, rcx (but returned value) 
+; - r9, r10, rdi, rsi, rcx (but returned value) 
 
 bigint_sub: 
         push    rcx
